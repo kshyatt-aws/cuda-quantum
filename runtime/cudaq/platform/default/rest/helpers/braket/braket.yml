@@ -1,0 +1,12 @@
+
+name: "braket"
+description: "The Braket Backend!"
+
+config:
+  platform-qpu: remote_rest
+  link-libs: ["-lcudaq-braket", "-lcudaq-rest-qpu"]
+  gen-target-backend: true
+  platform-lowering-config: ""
+  codegen-emission: qir-base  #openqasm
+  library-mode: false
+

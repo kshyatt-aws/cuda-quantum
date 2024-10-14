@@ -157,7 +157,7 @@ if(NOT BLAS_LIBRARIES AND EXISTS "$ENV{BLAS_INSTALL_PREFIX}/libblas.a")
 endif()
 if(NOT CURL_LIBRARY AND EXISTS "$ENV{CURL_INSTALL_PREFIX}/lib/libcurl.a")
   SET(CURL_LIBRARY "$ENV{CURL_INSTALL_PREFIX}/lib/libcurl.a")	
-  SET(CURL_INCLUDE_DIR "$ENV{CURL_INSTALL_PREFIX}/include")
+  SET(CURL_INCLUDE_DIR "$ENV{CURL_INSTALL_PREFIX}/include" CACHE STRING "")
   SET(CURL_CONFIG_EXECUTABLE "$ENV{CURL_INSTALL_PREFIX}/bin/curl-config")
   SET(CMAKE_USE_SYSTEM_CURL TRUE)
   SET(CURL_NO_CURL_CMAKE ON)
@@ -477,6 +477,16 @@ if (OPENSSL_FOUND AND CUDAQ_ENABLE_REST)
   find_path(ASIO_INCLUDE_DIR asio.hpp PATHS tpls/asio/asio/include)
   add_subdirectory(tpls/Crow)
 endif()
+
+# AWS SDK for C++
+set(AWS_USER_AGENT_CUSTOMIZATION "CUDA-Q/${CUDA_QUANTUM_VERSION}" CACHE STRING "" FORCE)
+set(BUILD_ONLY "braket;s3-crt;sts" CACHE STRING "" FORCE)
+set(ENABLE_TESTING OFF CACHE STRING "")
+# set(BUILD_SHARED_LIBS OFF)
+# set(OPENSSL_USE_STATIC_LIBS TRUE)
+# link_libraries(/usr/local/openssl/lib64/libssl.a /usr/local/zlib/lib/libz.a)
+list(APPEND CMAKE_PREFIX_PATH "$ENV{OPENSSL_INSTALL_PREFIX}")
+add_subdirectory(tpls/aws-sdk-cpp)
 
 
 # Check for CUDA Support
