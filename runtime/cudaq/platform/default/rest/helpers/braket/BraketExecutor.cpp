@@ -6,7 +6,7 @@
  * the terms of the Apache License 2.0 which accompanies this distribution.    *
  ******************************************************************************/
 
-#include "aws/s3-crt/S3CrtClientConfiguration.h"
+// #include "aws/s3-crt/S3CrtClientConfiguration.h"
 #include "common/Executor.h"
 #include "common/FmtCore.h"
 #include "common/MeasureCounts.h"
@@ -74,10 +74,14 @@ public:
 
   details::future
   execute(std::vector<KernelExecution> &codesToExecute) override {
+    for(auto const & code : codesToExecute){
+      std::cout<<"\n\n"<<code.code<<"\n\n";
+    }
 
     Aws::Client::ClientConfiguration clientConfig;
 
     std::promise<sample_result> p;
+    return p.get_future();
     CountsDictionary cd;
 
     clientConfig.verifySSL = false; // TODO... fix all of this

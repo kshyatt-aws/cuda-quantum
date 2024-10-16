@@ -7,6 +7,6 @@ config:
   link-libs: ["-lcudaq-braket", "-lcudaq-rest-qpu"]
   gen-target-backend: true
   platform-lowering-config: ""
-  codegen-emission: qir-base  #openqasm
+  codegen-emission: qasm2
   library-mode: false
 
