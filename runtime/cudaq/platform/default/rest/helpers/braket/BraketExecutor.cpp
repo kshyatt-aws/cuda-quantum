@@ -32,6 +32,7 @@
 #include <aws/core/utils/logging/LogLevel.h>
 
 #include <nlohmann/json.hpp>
+#include <regex>
 #include <string>
 #include <thread>
 
@@ -76,11 +77,28 @@ public:
   execute(std::vector<KernelExecution> &codesToExecute) override {
     std::string action =
         "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
-        "\"version\": \"1\"}, \"source\": \" " +
-        codesToExecute[0].code +
-        "\", \"inputs\": {}}";
+        "\"version\": \"1\"}, \"source\": \"\", \"inputs\": {}}";
 
+    std::string source = codesToExecute[0].code;
+
+    std::regex include_re("include \".*\";");
+
+    source = std::regex_replace(source, include_re, "");
+
+    source = std::regex_replace(source, std::regex{"\\scx\\s"}, " cnot ");
+
+
+    auto action_json = nlohmann::json::parse(action);
+    action_json["source"] = source;
+    
+    // for(char & c : action){
+    //   if(c=='\n') c = ' ';
+    // }
+
+    // nlohmann::json::string_t s{action};
+    action = action_json.dump();
     std::cout << action<<"\n";
+
 
     Aws::Client::ClientConfiguration clientConfig;
 
@@ -113,11 +131,11 @@ public:
 
     std::string sv1_arn =
         "arn:aws:braket:::device/quantum-simulator/amazon/sv1";
-    action =
-        "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
-        "\"version\": \"1\"}, \"source\": \"OPENQASM 3.0;\\nbit[2] "
-        "b;\\nqubit[2] q;\\nh q[0];\\ncnot q[0], q[1];\\nb[0] = measure "
-        "q[0];\\nb[1] = measure q[1];\", \"inputs\": {}}";
+    // action =
+    //     "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
+    //     "\"version\": \"1\"}, \"source\": \"OPENQASM 3.0;\\nbit[2] "
+    //     "b;\\nqubit[2] q;\\nh q[0];\\ncnot q[0], q[1];\\nb[0] = measure "
+    //     "q[0];\\nb[1] = measure q[1];\", \"inputs\": {}}";
 
     req.SetAction(action);
     req.SetDeviceArn(sv1_arn);
@@ -167,7 +185,7 @@ public:
       }
 
     } else {
-      std::cout << "Create error\n";
+      std::cout << "Create error\n"<<response.GetError()<<"\n";
     }
 
     ExecutionResult ex_r{cd};
