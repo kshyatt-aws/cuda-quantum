@@ -74,14 +74,17 @@ public:
 
   details::future
   execute(std::vector<KernelExecution> &codesToExecute) override {
-    for(auto const & code : codesToExecute){
-      std::cout<<"\n\n"<<code.code<<"\n\n";
-    }
+    std::string action =
+        "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
+        "\"version\": \"1\"}, \"source\": \" " +
+        codesToExecute[0].code +
+        "\", \"inputs\": {}}";
+
+    std::cout << action<<"\n";
 
     Aws::Client::ClientConfiguration clientConfig;
 
     std::promise<sample_result> p;
-    return p.get_future();
     CountsDictionary cd;
 
     clientConfig.verifySSL = false; // TODO... fix all of this
@@ -92,6 +95,7 @@ public:
     Aws::S3Crt::S3CrtClient s3Client{s3config};
 
     auto callerIdResponse = stsClient.GetCallerIdentity();
+
 
     if (!callerIdResponse.IsSuccess()) {
       p.set_exception(
@@ -109,7 +113,7 @@ public:
 
     std::string sv1_arn =
         "arn:aws:braket:::device/quantum-simulator/amazon/sv1";
-    std::string action =
+    action =
         "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
         "\"version\": \"1\"}, \"source\": \"OPENQASM 3.0;\\nbit[2] "
         "b;\\nqubit[2] q;\\nh q[0];\\ncnot q[0], q[1];\\nb[0] = measure "
