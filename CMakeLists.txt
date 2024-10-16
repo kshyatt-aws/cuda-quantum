@@ -484,12 +484,13 @@ set(BUILD_ONLY "braket;s3-crt;sts" CACHE STRING "" FORCE)
 set(CURL_LIBRARY "$ENV{CURL_INSTALL_PREFIX}/lib/libcurl.a" CACHE STRING "" FORCE)
 set(CURL_INCLUDE_DIR "$ENV{CURL_INSTALL_PREFIX}/include" CACHE STRING "" FORCE)
 set(OPENSSL_ROOT_DIR "$ENV{OPENSSL_INSTALL_PREFIX}" CACHE STRING "" FORCE)
-set(crypto_LIBRARY "$ENV{OPENSSL_INSTALL_PREFIX}/lib64/libcrypto.a" CACHE STRING "" FORCE)
+set(crypto_LIBRARY "$ENV{OPENSSL_INSTALL_PREFIX}/lib/libcrypto.a" CACHE STRING "" FORCE)
+set(crypto_STATIC_LIBRARY "$ENV{OPENSSL_INSTALL_PREFIX}/lib/libcrypto.a" CACHE STRING "" FORCE)
 set(crypto_INCLUDE_DIR "$ENV{OPENSSL_INSTALL_PREFIX}/include" CACHE STRING "" FORCE)
 set(CMAKE_COMPILE_WARNING_AS_ERROR OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+remove_definitions(-Werror)
 add_subdirectory(tpls/aws-sdk-cpp EXCLUDE_FROM_ALL)
-
 
 # Check for CUDA Support
 # ==============================================================================
