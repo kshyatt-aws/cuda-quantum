@@ -6,6 +6,8 @@
 # the terms of the Apache License 2.0 which accompanies this distribution.     #
 # ============================================================================ #
 
+target_sources(cudaq-rest-qpu PRIVATE BraketServerHelper.cpp)
+add_target_config(braket)
 add_library(cudaq-braket SHARED BraketExecutor.cpp BraketServerHelper.cpp)
 
 target_link_libraries(cudaq-braket 

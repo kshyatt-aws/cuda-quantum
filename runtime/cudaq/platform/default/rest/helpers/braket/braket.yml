@@ -1,12 +1,30 @@
 
 name: "braket"
-description: "The Braket Backend!"
+description: "CUDA-Q target for Amazon Braket."
 
 config:
+  # Tell DefaultQuantumPlatform what QPU subtype to use
   platform-qpu: remote_rest
+  # Add the rest-qpu library to the link list
   link-libs: ["-lcudaq-braket", "-lcudaq-rest-qpu"]
+  # Tell NVQ++ to generate glue code to set the target backend name
   gen-target-backend: true
-  platform-lowering-config: ""
+  # Define the lowering pipeline
+  platform-lowering-config: "const-prop-complex,canonicalize,cse,lift-array-value,state-prep,unitary-synthesis,canonicalize,apply-op-specialization,aggressive-early-inlining,expand-measurements,unrolling-pipeline,func.func(lower-to-cfg),canonicalize,func.func(multicontrol-decomposition)"
+  # Tell the rest-qpu that we are generating OpenQASM 2.0.
   codegen-emission: qasm2
+  # Library mode is only for simulators, physical backends must turn this off
   library-mode: false
+
+target-arguments:
+  - key: machine
+    required: false
+    type: string
+    platform-arg: qpu 
+    help-string: "Specify the Amazon Braket QPU."
+  - key: noise-model
+    required: false
+    type: string
+    platform-arg: noise 
+    help-string: "Specify the noise model for simulation."
 
