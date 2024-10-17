@@ -26,7 +26,6 @@ bool isValidExpVal(double value) {
 }
 
 CUDAQ_TEST(BraketTester, checkSampleSync) {
-  std::cout << "running Braket sample sync test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -34,25 +33,18 @@ CUDAQ_TEST(BraketTester, checkSampleSync) {
                                    mockPort, fileName);
 
   auto &platform = cudaq::get_platform();
-  std::cout << "sample sync test got platform. backendString: " << backendString << std::endl;
   platform.setTargetBackend(backendString);
-  std::cout << "sample sync test set target backend" << std::endl;
 
   auto kernel = cudaq::make_kernel();
   auto qubit = kernel.qalloc(2);
   kernel.h(qubit[0]);
   kernel.mz(qubit[0]);
-  std::cout << "sample sync test created kernel" << std::endl;
   auto counts = cudaq::sample(kernel);
-  std::cout << "sample sync test got counts" << std::endl;
   counts.dump();
-  std::cout << "sample sync test dumped counts" << std::endl;
   EXPECT_EQ(counts.size(), 2);
-  std::cout << "done running Braket sample sync test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkSampleSyncEmulate) {
-  std::cout << "running Braket sample sync emulate test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -73,7 +65,6 @@ CUDAQ_TEST(BraketTester, checkSampleSyncEmulate) {
   auto counts = cudaq::sample(kernel);
   counts.dump();
   EXPECT_EQ(counts.size(), 2);
-  std::cout << "done running Braket sample sync emulate test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkSampleAsync) {
@@ -96,7 +87,6 @@ CUDAQ_TEST(BraketTester, checkSampleAsync) {
 }
 
 CUDAQ_TEST(BraketTester, checkSampleAsyncEmulate) {
-  std::cout << "running Braket sample async emulate test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -116,11 +106,9 @@ CUDAQ_TEST(BraketTester, checkSampleAsyncEmulate) {
   auto counts = future.get();
   counts.dump();
   EXPECT_EQ(counts.size(), 2);
-  std::cout << "done running Braket sample async emulate test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkSampleAsyncLoadFromFile) {
-  std::cout << "running Braket sample async load from file test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -153,11 +141,9 @@ CUDAQ_TEST(BraketTester, checkSampleAsyncLoadFromFile) {
   EXPECT_EQ(counts.size(), 2);
 
   std::remove("saveMe.json");
-  std::cout << "done running Braket sample async load from file test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkObserveSync) {
-  std::cout << "running Braket observe sync test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -180,11 +166,9 @@ CUDAQ_TEST(BraketTester, checkObserveSync) {
 
   printf("ENERGY: %lf\n", result.expectation());
   EXPECT_TRUE(isValidExpVal(result.expectation()));
-  std::cout << "done running Braket observe sync test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkObserveSyncEmulate) {
-  std::cout << "running Braket observe sync emulate test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -209,11 +193,9 @@ CUDAQ_TEST(BraketTester, checkObserveSyncEmulate) {
 
   printf("ENERGY: %lf\n", result.expectation());
   EXPECT_TRUE(isValidExpVal(result.expectation()));
-  std::cout << "done running Braket observe sync test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkObserveAsync) {
-  std::cout << "running Braket observe async test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -238,11 +220,9 @@ CUDAQ_TEST(BraketTester, checkObserveAsync) {
 
   printf("ENERGY: %lf\n", result.expectation());
   EXPECT_TRUE(isValidExpVal(result.expectation()));
-  std::cout << "done running Braket observe async test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkObserveAsyncEmulate) {
-  std::cout << "running Braket observe async emulate test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -269,11 +249,9 @@ CUDAQ_TEST(BraketTester, checkObserveAsyncEmulate) {
 
   printf("ENERGY: %lf\n", result.expectation());
   EXPECT_TRUE(isValidExpVal(result.expectation()));
-  std::cout << "done running Braket observe async emulate test" << std::endl;
 }
 
 CUDAQ_TEST(BraketTester, checkObserveAsyncLoadFromFile) {
-  std::cout << "running Braket observe async load from file test" << std::endl;
   std::string home = std::getenv("HOME");
   std::string fileName = home + "/FakeCppBraket.config";
   auto backendString = fmt::format(fmt::runtime(backendStringTemplate),
@@ -311,7 +289,6 @@ CUDAQ_TEST(BraketTester, checkObserveAsyncLoadFromFile) {
 
   printf("ENERGY: %lf\n", result.expectation());
   EXPECT_TRUE(isValidExpVal(result.expectation()));
-  std::cout << "done running Braket observe async load from file test" << std::endl;
 }
 
 int main(int argc, char **argv) {
