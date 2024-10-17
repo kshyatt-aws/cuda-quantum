@@ -31,6 +31,8 @@
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 #include <aws/core/utils/logging/LogLevel.h>
 
+#include "common/Logger.h"
+
 #include <nlohmann/json.hpp>
 #include <regex>
 #include <string>
@@ -97,7 +99,7 @@ public:
 
     // nlohmann::json::string_t s{action};
     action = action_json.dump();
-    std::cout << action<<"\n";
+    cudaq::info("OpenQASM 2 action: {}", action);
 
 
     Aws::Client::ClientConfiguration clientConfig;
@@ -147,7 +149,7 @@ public:
 
     if (response.IsSuccess()) {
       std::string taskArn = response.GetResult().GetQuantumTaskArn();
-      std::cout << "Created " << taskArn << "\n";
+      cudaq::info("Created {}", taskArn);
       Aws::Braket::Model::QuantumTaskStatus taskStatus;
       Aws::Braket::Model::GetQuantumTaskRequest getTaskReq;
       getTaskReq.SetQuantumTaskArn(taskArn);
@@ -164,7 +166,7 @@ public:
       std::string outBucket = r.GetResult().GetOutputS3Bucket();
       std::string outPrefix = r.GetResult().GetOutputS3Directory();
 
-      std::cout << "results at " << outBucket << "/" << outPrefix << "\n";
+      cudaq::info("results at {}/{}", outBucket, outPrefix);
       Aws::S3Crt::Model::GetObjectRequest resultRequest;
       resultRequest.SetBucket(outBucket);
       resultRequest.SetKey(fmt::format("{}/results.json", outPrefix));

@@ -21,6 +21,10 @@ const std::string SV1 = "sv1";
 const std::string DM1 = "dm1";
 const std::string TN1 = "tn1";
 
+const std::string sv1_arn = "arn:aws:braket:::device/quantum-simulator/amazon/sv1";
+const std::string dm1_arn = "arn:aws:braket:::device/quantum-simulator/amazon/dm1";
+const std::string tn1_arn = "arn:aws:braket:::device/quantum-simulator/amazon/tn1";
+
 const std::map<std::string, uint> Machines = {{SV1, 34}, {DM1, 17}, {TN1, 50}};
 
 /// @brief The BraketServerHelper class extends the ServerHelper class to handle
