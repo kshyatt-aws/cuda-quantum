@@ -6,77 +6,14 @@
  * the terms of the Apache License 2.0 which accompanies this distribution.    *
  ******************************************************************************/
 
-// #include "aws/s3-crt/S3CrtClientConfiguration.h"
-#include "common/Executor.h"
-#include "common/FmtCore.h"
-#include "common/MeasureCounts.h"
-#include "cudaq.h"
-
-#include <chrono>
-#include <iostream>
-
-#include <aws/core/Aws.h>
-
-#include <aws/braket/BraketClient.h>
-#include <aws/braket/model/CreateQuantumTaskRequest.h>
-#include <aws/braket/model/GetQuantumTaskRequest.h>
-#include <aws/braket/model/QuantumTaskStatus.h>
-
-#include <aws/sts/STSClient.h>
-
-#include <aws/s3-crt/S3CrtClient.h>
-#include <aws/s3-crt/model/GetObjectRequest.h>
-
-#include <aws/core/utils/logging/AWSLogging.h>
-#include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/logging/LogLevel.h>
-
-#include "common/Logger.h"
-
-#include <nlohmann/json.hpp>
-#include <regex>
-#include <string>
-#include <thread>
+#include "BraketExecutor.h"
+#include "BraketServerHelper.h"
 
 namespace cudaq {
-class BraketExecutor : public cudaq::Executor {
-
-  Aws::SDKOptions options;
-
-  std::string region;
-  std::string accountId;
-
-  class ScopedApi {
-    Aws::SDKOptions &options;
-
-  public:
-    ScopedApi(Aws::SDKOptions &options) : options(options) {
-
-      // options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Debug;
-
-      Aws::InitAPI(options);
-    }
-    ~ScopedApi() { Aws::ShutdownAPI(options); }
-  };
-
-  ScopedApi api;
-
-public:
-  BraketExecutor() : api(options) {
-    std::cerr << "made a braket exec\n";
-
-    // Aws::InitAPI(options);
-
-  }
-
-  ~BraketExecutor() {
-    std::cerr << "destroy braket exec\n";
-
-    // Aws::ShutdownAPI(options);
-  }
-
-  details::future
-  execute(std::vector<KernelExecution> &codesToExecute) override {
+  details::future BraketExecutor::execute(std::vector<KernelExecution> &codesToExecute) {
+    auto braketServerHelper = dynamic_cast<BraketServerHelper *>(serverHelper);
+    assert(braketServerHelper);
+    braketServerHelper->setShots(shots);
     std::string action =
         "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
         "\"version\": \"1\"}, \"source\": \"\", \"inputs\": {}}";
@@ -131,17 +68,16 @@ public:
 
     Aws::Braket::Model::CreateQuantumTaskRequest req;
 
+    auto config = braketServerHelper->getConfig();
+    cudaq::info("Backend config: {}, shots {}", config, shots);
+    config.insert({"shots", std::to_string(shots)});
+
     std::string sv1_arn =
         "arn:aws:braket:::device/quantum-simulator/amazon/sv1";
-    // action =
-    //     "{\"braketSchemaHeader\": {\"name\": \"braket.ir.openqasm.program\", "
-    //     "\"version\": \"1\"}, \"source\": \"OPENQASM 3.0;\\nbit[2] "
-    //     "b;\\nqubit[2] q;\\nh q[0];\\ncnot q[0], q[1];\\nb[0] = measure "
-    //     "q[0];\\nb[1] = measure q[1];\", \"inputs\": {}}";
 
     req.SetAction(action);
     req.SetDeviceArn(sv1_arn);
-    req.SetShots(10);
+    req.SetShots(shots);
     req.SetOutputS3Bucket(defaultBucket);
     req.SetOutputS3KeyPrefix(defaultPrefix);
 
@@ -160,8 +96,8 @@ public:
         r = braketClient.GetQuantumTask(getTaskReq);
         taskStatus = r.GetResult().GetStatus();
       } while (taskStatus != Aws::Braket::Model::QuantumTaskStatus::COMPLETED &&
-               taskStatus != Aws::Braket::Model::QuantumTaskStatus::FAILED &&
-               taskStatus != Aws::Braket::Model::QuantumTaskStatus::CANCELLED);
+                taskStatus != Aws::Braket::Model::QuantumTaskStatus::FAILED &&
+                taskStatus != Aws::Braket::Model::QuantumTaskStatus::CANCELLED);
 
       std::string outBucket = r.GetResult().GetOutputS3Bucket();
       std::string outPrefix = r.GetResult().GetOutputS3Directory();
@@ -196,8 +132,7 @@ public:
     p.set_value(result);
 
     return {p.get_future()};
-  }
-};
-} // namespace cudaq
+  };
+} // namespace cuda-q
 
 CUDAQ_REGISTER_TYPE(cudaq::Executor, cudaq::BraketExecutor, braket);

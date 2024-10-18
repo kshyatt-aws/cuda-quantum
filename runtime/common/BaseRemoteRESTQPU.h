@@ -317,7 +317,8 @@ public:
     serverHelper = cudaq::registry::get<cudaq::ServerHelper>(qpuName);
     serverHelper->initialize(backendConfig);
     serverHelper->updatePassPipeline(platformPath, passPipelineConfig);
-
+    cudaq::info("Retrieving executor with name {}", qpuName);
+    cudaq::info("Is this executor registered? {}", cudaq::registry::isRegistered<cudaq::Executor>(qpuName));
     executor = cudaq::registry::isRegistered<cudaq::Executor>(qpuName)
                    ? cudaq::registry::get<cudaq::Executor>(qpuName)
                    : std::make_unique<cudaq::Executor>();

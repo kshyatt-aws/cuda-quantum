@@ -6,67 +6,9 @@
  * the terms of the Apache License 2.0 which accompanies this distribution.    *
  ******************************************************************************/
 
-#include <iostream>
-#include "common/Logger.h"
-#include "common/RestClient.h"
-#include "common/ServerHelper.h"
-#include <map>
-#include <regex>
-#include <sstream>
-#include <thread>
+#include "BraketServerHelper.h"
 
 namespace cudaq {
-
-const std::string SV1 = "sv1";
-const std::string DM1 = "dm1";
-const std::string TN1 = "tn1";
-const std::string Aria1 = "aria1";
-const std::string Aria2 = "aria2";
-const std::string Garnet = "garnet";
-const std::string Aquila = "aquila";
-
-const std::string sv1_arn = "arn:aws:braket:::device/quantum-simulator/amazon/sv1";
-const std::string dm1_arn = "arn:aws:braket:::device/quantum-simulator/amazon/dm1";
-const std::string tn1_arn = "arn:aws:braket:::device/quantum-simulator/amazon/tn1";
-const std::string aria1_arn = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1";
-const std::string aria2_arn = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2";
-const std::string garnet_arn = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet";
-const std::string aquila_arn = "arn:aws:braket:us-east-1::device/qpu/quera/Aquila";
-
-// Do we need to add the `device_name.txt` files for these?
-const std::map<std::string, uint> Machines = {{SV1, 34}, {DM1, 17}, {TN1, 50}, {Aria1, 25}, {Aria2, 25}, {Garnet, 20}, {Aquila, 256}};
-
-/// @brief The BraketServerHelper class extends the ServerHelper class to handle
-/// interactions with the Amazon Braket server for submitting and retrieving quantum
-/// computation jobs.
-class BraketServerHelper : public ServerHelper {
-  /// @brief Returns the name of the server helper.
-  const std::string name() const override {return "braket";}
-
-  /// @brief Initializes the server helper with the provided backend
-  /// configuration.
-  void initialize(BackendConfig config) override;
-
-  RestHeaders getHeaders() override {return {};}
-
-  ServerJobPayload
-  createJob(std::vector<KernelExecution> &circuitCodes) override {return {};}
-
-  std::string extractJobId(ServerMessage &postResponse) override {return "";}
-
-  std::string constructGetJobPath(std::string &jobId) override {return "";}
-
-  std::string constructGetJobPath(ServerMessage &postResponse) override {return "";}
-
-  bool jobIsDone(ServerMessage &getJobResponse) override {return true;}
-
-  cudaq::sample_result processResults(ServerMessage &postJobResponse,
-                                              std::string &jobId) override{
-                                                return {};
-                                              }
-};
-
-namespace {
   std::string get_from_config(BackendConfig config, const std::string &key,
                             const auto &missing_functor) {
     const auto iter = config.find(key);
@@ -86,6 +28,13 @@ namespace {
     throw std::runtime_error(stream.str());
   }
 }
+
+// Implementation of the getValueOrDefault function
+std::string
+BraketServerHelper::getValueOrDefault(const BackendConfig &config,
+                                      const std::string &key,
+                                      const std::string &defaultValue) const {
+  return config.find(key) != config.end() ? config.at(key) : defaultValue;
 }
 
 // Initialize the Braket server helper with a given backend configuration
@@ -94,9 +43,11 @@ void BraketServerHelper::initialize(BackendConfig config) {
 
   // Fetch machine info before checking emulate because we want to be able to
   // emulate specific machines.
-  auto machine = get_from_config(config, "machine", []() { return SV1; });
+  
+  auto machine = getValueOrDefault(config, "machine", SV1);
   check_machine_allowed(machine);
   config["machine"] = machine;
+  config["target"]  = machine;
   cudaq::info("Running on machine {}", machine);
 
   const auto emulate_it = config.find("emulate");
@@ -108,16 +59,36 @@ void BraketServerHelper::initialize(BackendConfig config) {
   }
   config["version"] = "v0.3";
   config["user_agent"] = "cudaq/0.3.0";
-  config["target"] = "SV1";
   config["qubits"] = Machines.at(machine);
   // Construct the API job path
   config["job_path"] = "/tasks"; // config["url"] + "/tasks";
+  if (!config["shots"].empty())
+    this->setShots(std::stoul(config["shots"]));
 
   parseConfigForCommonParams(config);
 
   // Move the passed config into the member variable backendConfig
   backendConfig = std::move(config);
 };
-}; // namespace cuda-q
+
+// Create a job for the IonQ quantum computer
+ServerJobPayload
+BraketServerHelper::createJob(std::vector<KernelExecution> &circuitCodes) {
+  std::vector<ServerMessage> jobs;
+  for (auto &circuitCode : circuitCodes) {
+    // Construct the job message
+    ServerMessage job;
+    job["name"] = circuitCode.name;
+    job["target"] = backendConfig.at("target");
+
+    job["qubits"] = backendConfig.at("qubits");
+    job["shots"] = shots;
+    job["input"]["format"] = "qasm2";
+    job["input"]["data"] = circuitCode.code;
+    jobs.push_back(job);
+  }
+};
+
+} // namespace cuda-q
 
 CUDAQ_REGISTER_TYPE(cudaq::ServerHelper, cudaq::BraketServerHelper, braket)
