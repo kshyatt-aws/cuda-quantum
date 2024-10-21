@@ -67,6 +67,9 @@ class BraketServerHelper : public ServerHelper {
                                                 return {};
                                               }
   private:
+    /// @brief Return the headers required for the REST calls
+    RestHeaders generateRequestHeader() const;
+    RestHeaders generateRequestHeader(std::string) const;
     /// @brief Helper function to get value from config or return a default value.
     std::string getValueOrDefault(const BackendConfig &config,
                                   const std::string &key,

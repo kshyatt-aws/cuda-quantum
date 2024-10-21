@@ -71,6 +71,27 @@ void BraketServerHelper::initialize(BackendConfig config) {
   backendConfig = std::move(config);
 };
 
+std::map<std::string, std::string>
+BraketServerHelper::generateRequestHeader() const {
+  std::string apiKey, refreshKey, credentials, timeStr;
+  std::map<std::string, std::string> headers{
+      {"Authorization", ""},
+      {"Content-Type", "application/json"},
+      {"Connection", "keep-alive"},
+      {"Accept", "*/*"}};
+  return headers;
+}
+
+std::map<std::string, std::string>
+BraketServerHelper::generateRequestHeader(std::string authKey) const {
+  std::map<std::string, std::string> headers{
+      {"Authorization", authKey},
+      {"Content-Type", "application/json"},
+      {"Connection", "keep-alive"},
+      {"Accept", "*/*"}};
+  return headers;
+}
+
 // Create a job for the IonQ quantum computer
 ServerJobPayload
 BraketServerHelper::createJob(std::vector<KernelExecution> &circuitCodes) {
@@ -87,6 +108,16 @@ BraketServerHelper::createJob(std::vector<KernelExecution> &circuitCodes) {
     job["input"]["data"] = circuitCode.code;
     jobs.push_back(job);
   }
+  // Get the headers
+  RestHeaders headers = generateRequestHeader();
+
+  cudaq::info(
+      "Created job payload for braket, language is OpenQASM 2.0, targeting {}",
+      backendConfig.at("target"));
+
+  // return the payload
+  std::string baseUrl = "";
+  return std::make_tuple(baseUrl + "job", headers, jobs);
 };
 
 } // namespace cuda-q
